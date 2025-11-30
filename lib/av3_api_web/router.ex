@@ -5,24 +5,25 @@ defmodule Av3ApiWeb.Router do
     plug :accepts, ["json"]
   end
 
-  scope "/api", Av3ApiWeb do
-    pipe_through :api
+  pipeline :auth do
+    plug Av3Api.Pipeline
   end
 
-  # Enable LiveDashboard and Swoosh mailbox preview in development
-  if Application.compile_env(:av3_api, :dev_routes) do
-    # If you want to use the LiveDashboard in production, you should put
-    # it behind authentication and allow only admins to access it.
-    # If your application does not have an admins-only section yet,
-    # you can use Plug.BasicAuth to set up some basic authentication
-    # as long as you are also using SSL (which you should anyway).
-    import Phoenix.LiveDashboard.Router
+  scope "/api", Av3ApiWeb do
+    pipe_through :api
 
-    scope "/dev" do
-      pipe_through [:fetch_session, :protect_from_forgery]
-
-      live_dashboard "/dashboard", metrics: Av3ApiWeb.Telemetry
-      forward "/mailbox", Plug.Swoosh.MailboxPreview
+    # Rotas Públicas (v1) - Qualquer um acessa
+    scope "/v1" do
+      post "/auth/register", AuthController, :register
+      post "/auth/login", AuthController, :login
     end
+  end
+
+  # Rotas Protegidas (v1) - Só com Token JWT acessa
+  scope "/api/v1", Av3ApiWeb do
+    pipe_through [:api, :auth]
+
+    # Aqui colocaremos Users, Drivers, Rides depois...
+    resources "/users", UserController, except: [:new, :edit, :create] # Create via register
   end
 end

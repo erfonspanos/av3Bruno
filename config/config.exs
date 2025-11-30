@@ -23,12 +23,6 @@ config :av3_api, Av3ApiWeb.Endpoint,
   live_view: [signing_salt: "XT7G0X3Z"]
 
 # Configure the mailer
-#
-# By default it uses the "Local" adapter which stores the emails
-# locally. You can see the emails in your browser, at "/dev/mailbox".
-#
-# For production it's recommended to configure a different adapter
-# at the `config/runtime.exs`.
 config :av3_api, Av3Api.Mailer, adapter: Swoosh.Adapters.Local
 
 # Configure Elixir's Logger
@@ -38,6 +32,12 @@ config :logger, :default_formatter,
 
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
+
+# --- CONFIGURAÇÃO DO GUARDIAN (JWT) ---
+# Adicionado para resolver o erro {:error, :secret_not_found}
+config :av3_api, Av3Api.Guardian,
+  issuer: "av3_api",
+  secret_key: "SegredoSuperSecreto_TroqueIssoEmProducao_MasParaOTrabalhoServe"
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
