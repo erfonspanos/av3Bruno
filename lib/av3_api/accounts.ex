@@ -124,4 +124,9 @@ defmodule Av3Api.Accounts do
         {:error, :unauthorized}
     end
   end
+
+  # --- DRIVER PROFILE POR DRIVER ID ---
+  def get_driver_profile_by_driver(driver_id) do
+    Repo.get_by(DriverProfile, driver_id: driver_id)
+  end
 end

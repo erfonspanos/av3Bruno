@@ -6,26 +6,21 @@ defmodule Av3ApiWeb.UserController do
 
   action_fallback Av3ApiWeb.FallbackController
 
+  # GET /api/v1/users (Listar todos)
   def index(conn, _params) do
     users = Accounts.list_users()
     render(conn, :index, users: users)
   end
 
-  def create(conn, %{"user" => user_params}) do
-    with {:ok, %User{} = user} <- Accounts.create_user(user_params) do
-      conn
-      |> put_status(:created)
-      |> put_resp_header("location", ~p"/api/users/#{user}")
-      |> render(:show, user: user)
-    end
-  end
-
+  # GET /api/v1/users/:id (Ver perfil)
   def show(conn, %{"id" => id}) do
     user = Accounts.get_user!(id)
     render(conn, :show, user: user)
   end
 
-  def update(conn, %{"id" => id, "user" => user_params}) do
+  # PUT /api/v1/users/:id (Atualizar dados)
+  # Removemos a chave "user" do params para aceitar JSON plano
+  def update(conn, %{"id" => id} = user_params) do
     user = Accounts.get_user!(id)
 
     with {:ok, %User{} = user} <- Accounts.update_user(user, user_params) do
@@ -33,6 +28,7 @@ defmodule Av3ApiWeb.UserController do
     end
   end
 
+  # DELETE /api/v1/users/:id (Remover conta)
   def delete(conn, %{"id" => id}) do
     user = Accounts.get_user!(id)
 

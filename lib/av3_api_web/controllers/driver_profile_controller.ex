@@ -3,41 +3,66 @@ defmodule Av3ApiWeb.DriverProfileController do
 
   alias Av3Api.Accounts
   alias Av3Api.Accounts.DriverProfile
+  alias Av3Api.Guardian
 
   action_fallback Av3ApiWeb.FallbackController
 
-  def index(conn, _params) do
-    driver_profiles = Accounts.list_driver_profiles()
-    render(conn, :index, driver_profiles: driver_profiles)
-  end
+  # GET /api/v1/drivers/:driver_id/profile
+  def show(conn, %{"driver_id" => driver_id}) do
+    # Verifica permissão: Só o próprio motorista pode ver seus dados sensíveis
+    current_driver = Guardian.Plug.current_resource(conn)
 
-  def create(conn, %{"driver_profile" => driver_profile_params}) do
-    with {:ok, %DriverProfile{} = driver_profile} <- Accounts.create_driver_profile(driver_profile_params) do
-      conn
-      |> put_status(:created)
-      |> put_resp_header("location", ~p"/api/driver_profiles/#{driver_profile}")
-      |> render(:show, driver_profile: driver_profile)
+    if to_string(current_driver.id) != to_string(driver_id) do
+       conn |> put_status(:forbidden) |> json(%{error: "Acesso negado."})
+    else
+      case Accounts.get_driver_profile_by_driver(driver_id) do
+        nil ->
+          conn |> put_status(:not_found) |> json(%{error: "Perfil ainda não criado."})
+        profile ->
+          render(conn, :show, driver_profile: profile)
+      end
     end
   end
 
-  def show(conn, %{"id" => id}) do
-    driver_profile = Accounts.get_driver_profile!(id)
-    render(conn, :show, driver_profile: driver_profile)
-  end
+  # POST /api/v1/drivers/:driver_id/profile
+  def create(conn, %{"driver_id" => driver_id} = params) do
+    current_driver = Guardian.Plug.current_resource(conn)
 
-  def update(conn, %{"id" => id, "driver_profile" => driver_profile_params}) do
-    driver_profile = Accounts.get_driver_profile!(id)
+    # Segurança: Garante que é o dono e que é um motorista
+    cond do
+      to_string(current_driver.id) != to_string(driver_id) ->
+         conn |> put_status(:forbidden) |> json(%{error: "Você não pode criar perfil para outro motorista."})
 
-    with {:ok, %DriverProfile{} = driver_profile} <- Accounts.update_driver_profile(driver_profile, driver_profile_params) do
-      render(conn, :show, driver_profile: driver_profile)
+      Accounts.get_driver_profile_by_driver(driver_id) != nil ->
+         conn |> put_status(:conflict) |> json(%{error: "Este motorista já possui um perfil cadastrado."})
+
+      true ->
+        profile_params = Map.put(params, "driver_id", driver_id)
+
+        with {:ok, %DriverProfile{} = profile} <- Accounts.create_driver_profile(profile_params) do
+          conn
+          |> put_status(:created)
+          |> render(:show, driver_profile: profile)
+        end
     end
   end
 
-  def delete(conn, %{"id" => id}) do
-    driver_profile = Accounts.get_driver_profile!(id)
+  # PUT /api/v1/drivers/:driver_id/profile
+  def update(conn, %{"driver_id" => driver_id} = params) do
+    current_driver = Guardian.Plug.current_resource(conn)
 
-    with {:ok, %DriverProfile{}} <- Accounts.delete_driver_profile(driver_profile) do
-      send_resp(conn, :no_content, "")
+    if to_string(current_driver.id) != to_string(driver_id) do
+       conn |> put_status(:forbidden) |> json(%{error: "Acesso negado."})
+    else
+      profile = Accounts.get_driver_profile_by_driver(driver_id)
+
+      if profile do
+        with {:ok, %DriverProfile{} = updated_profile} <- Accounts.update_driver_profile(profile, params) do
+          render(conn, :show, driver_profile: updated_profile)
+        end
+      else
+         conn |> put_status(:not_found) |> json(%{error: "Perfil não encontrado para editar."})
+      end
     end
   end
 end

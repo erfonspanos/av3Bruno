@@ -26,16 +26,26 @@ defmodule Av3ApiWeb.Router do
     get "/drivers/:driver_id/vehicles", VehicleController, :index
     post "/drivers/:driver_id/vehicles", VehicleController, :create
 
+    # CRUD de Motoristas (exceto create, que é via register)
+    resources "/drivers", DriverController, except: [:new, :edit, :create]
+
+    # --- USERS ---
+    # CRUD de Usuários (exceto create, que é via register)
+    resources "/users", UserController, except: [:new, :edit, :create]
+
+    # --- RIDES ---
+    resources "/rides", RideController, only: [:create, :index, :show]
     post "/rides/:id/accept", RideController, :accept
     post "/rides/:id/start", RideController, :start
     post "/rides/:id/complete", RideController, :complete
 
-    resources "/rides", RideController, only: [:create, :index, :show]
-
-    # Rota aninhada de Avaliação
+    # --- RATINGS ---
     post "/rides/:ride_id/ratings", RatingController, :create
-    
-    # Aqui colocaremos Users, Drivers, Rides depois...
-    resources "/users", UserController, except: [:new, :edit, :create] # Create via register
+
+    # Rota de Perfil do Motorista (1:1)
+    get "/drivers/:driver_id/profile", DriverProfileController, :show
+    post "/drivers/:driver_id/profile", DriverProfileController, :create
+    put "/drivers/:driver_id/profile", DriverProfileController, :update
+
   end
 end
