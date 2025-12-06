@@ -29,9 +29,12 @@ defmodule Av3ApiWeb.Router do
     post "/rides/:id/accept", RideController, :accept
     post "/rides/:id/start", RideController, :start
     post "/rides/:id/complete", RideController, :complete
-    
+
     resources "/rides", RideController, only: [:create, :index, :show]
 
+    # Rota aninhada de Avaliação
+    post "/rides/:ride_id/ratings", RatingController, :create
+    
     # Aqui colocaremos Users, Drivers, Rides depois...
     resources "/users", UserController, except: [:new, :edit, :create] # Create via register
   end
