@@ -23,6 +23,9 @@ defmodule Av3ApiWeb.Router do
   scope "/api/v1", Av3ApiWeb do
     pipe_through [:api, :auth]
 
+    get "/drivers/:driver_id/vehicles", VehicleController, :index
+    post "/drivers/:driver_id/vehicles", VehicleController, :create
+
     # Aqui colocaremos Users, Drivers, Rides depois...
     resources "/users", UserController, except: [:new, :edit, :create] # Create via register
   end
