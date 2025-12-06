@@ -76,4 +76,74 @@ defmodule Av3Api.Operation do
   def change_ride(%Ride{} = ride, attrs \\ %{}) do
     Ride.changeset(ride, attrs)
   end
+
+  def accept_ride(ride_id, driver_id, vehicle_id) do
+    Repo.transaction(fn ->
+      # 1. Busca a corrida e BLOQUEIA a linha no banco (SELECT FOR UPDATE)
+      # Isso impede que dois motoristas aceitem ao mesmo tempo
+      ride = Repo.get(Ride, ride_id) |> Repo.preload([:user, :driver, :vehicle])
+
+      case ride do
+        nil ->
+          Repo.rollback(:not_found)
+
+        # 2. Verifica se está disponível
+        %Ride{status: "SOLICITADA"} ->
+          changeset = Ride.changeset(ride, %{
+            "status" => "ACEITA",
+            "driver_id" => driver_id,
+            "vehicle_id" => vehicle_id
+          })
+
+          case Repo.update(changeset) do
+            {:ok, updated_ride} -> updated_ride
+            {:error, reason} -> Repo.rollback(reason)
+          end
+
+        # 3. Se já estiver ACEITA ou outro status, falha
+        _ ->
+          Repo.rollback(:conflict)
+      end
+    end)
+  end
+
+  # --- INICIAR CORRIDA (ACEITA -> EM_ANDAMENTO) ---
+  def start_ride(ride_id, driver_id) do
+    ride = Repo.get(Ride, ride_id)
+
+    cond do
+      ride == nil -> {:error, :not_found}
+      # Só o motorista dono da corrida pode iniciar
+      ride.driver_id != driver_id -> {:error, :unauthorized}
+      # Só pode iniciar se estiver ACEITA
+      ride.status != "ACEITA" -> {:error, :conflict}
+      true ->
+        ride
+        |> Ride.changeset(%{
+             "status" => "EM_ANDAMENTO",
+             "started_at" => DateTime.utc_now()
+           })
+        |> Repo.update()
+    end
+  end
+
+  # --- FINALIZAR CORRIDA (EM_ANDAMENTO -> FINALIZADA) ---
+  def complete_ride(ride_id, driver_id, final_price) do
+    ride = Repo.get(Ride, ride_id)
+
+    cond do
+      ride == nil -> {:error, :not_found}
+      ride.driver_id != driver_id -> {:error, :unauthorized}
+      # Só pode finalizar se estiver EM_ANDAMENTO
+      ride.status != "EM_ANDAMENTO" -> {:error, :conflict}
+      true ->
+        ride
+        |> Ride.changeset(%{
+             "status" => "FINALIZADA",
+             "ended_at" => DateTime.utc_now(),
+             "final_price" => final_price
+           })
+        |> Repo.update()
+    end
+  end
 end

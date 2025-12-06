@@ -26,6 +26,10 @@ defmodule Av3ApiWeb.Router do
     get "/drivers/:driver_id/vehicles", VehicleController, :index
     post "/drivers/:driver_id/vehicles", VehicleController, :create
 
+    post "/rides/:id/accept", RideController, :accept
+    post "/rides/:id/start", RideController, :start
+    post "/rides/:id/complete", RideController, :complete
+    
     resources "/rides", RideController, only: [:create, :index, :show]
 
     # Aqui colocaremos Users, Drivers, Rides depois...

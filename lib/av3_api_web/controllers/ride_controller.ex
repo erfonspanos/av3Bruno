@@ -3,17 +3,15 @@ defmodule Av3ApiWeb.RideController do
 
   alias Av3Api.Operation
   alias Av3Api.Operation.Ride
-  alias Av3Api.Guardian # Necessário para pegar o usuário logado
+  alias Av3Api.Guardian
+  alias Av3Api.Accounts.Driver # Adicionei este alias para usar no teste de tipo
 
   action_fallback Av3ApiWeb.FallbackController
 
   # POST /api/v1/rides
-  # Aqui fazemos a mágica de converter o JSON do PDF para o Banco de Dados
   def create(conn, %{"origin" => origin, "destination" => dest} = _params) do
-    # 1. Recupera o usuário logado do Token (colocado lá pelo Pipeline)
     current_user = Guardian.Plug.current_resource(conn)
 
-    # 2. "Achata" os dados: Tira de dentro de 'origin' e põe em 'origin_lat', etc.
     ride_params = %{
       "user_id" => current_user.id,
       "origin_lat" => origin["lat"],
@@ -22,11 +20,9 @@ defmodule Av3ApiWeb.RideController do
       "dest_lng" => dest["lng"]
     }
 
-    # 3. Chama a função inteligente 'request_ride' que criamos no Operation
     with {:ok, %Ride{} = ride} <- Operation.request_ride(ride_params) do
       conn
       |> put_status(:created)
-      # |> put_resp_header("location", ~p"/api/rides/#{ride}") # Comentado para evitar erros de rota
       |> render(:show, ride: ride)
     end
   end
@@ -43,10 +39,45 @@ defmodule Av3ApiWeb.RideController do
     render(conn, :show, ride: ride)
   end
 
-  # Update e Delete (mantidos simples se precisar no futuro, mas o foco é o create)
+  # --- POST /api/v1/rides/:id/accept (CORRIGIDO) ---
+  def accept(conn, %{"id" => ride_id, "vehicle_id" => vehicle_id}) do
+    # Pegamos o recurso logado (pode ser User ou Driver)
+    resource = Guardian.Plug.current_resource(conn)
+
+    # Verificamos SE é um Motorista usando Pattern Matching do Elixir
+    case resource do
+      %Driver{} = driver ->
+        # É um motorista! Podemos prosseguir.
+        case Operation.accept_ride(ride_id, driver.id, vehicle_id) do
+          {:ok, %Ride{} = ride} ->
+            render(conn, :show, ride: ride)
+
+          {:error, :conflict} ->
+            conn
+            |> put_status(:conflict)
+            |> json(%{error: "Esta corrida já foi aceita ou não está disponível."})
+
+          {:error, :not_found} ->
+            conn
+            |> put_status(:not_found)
+            |> json(%{error: "Corrida não encontrada."})
+
+          {:error, _reason} ->
+            conn
+            |> put_status(:bad_request)
+            |> json(%{error: "Erro ao aceitar corrida."})
+        end
+
+      _ ->
+        # Se não for %Driver{} (ex: é um %User{}), bloqueamos.
+        conn
+        |> put_status(:forbidden)
+        |> json(%{error: "Apenas motoristas podem aceitar corridas."})
+    end
+  end
+
   def update(conn, %{"id" => id, "ride" => ride_params}) do
     ride = Operation.get_ride!(id)
-
     with {:ok, %Ride{} = ride} <- Operation.update_ride(ride, ride_params) do
       render(conn, :show, ride: ride)
     end
@@ -54,9 +85,43 @@ defmodule Av3ApiWeb.RideController do
 
   def delete(conn, %{"id" => id}) do
     ride = Operation.get_ride!(id)
-
     with {:ok, %Ride{}} <- Operation.delete_ride(ride) do
       send_resp(conn, :no_content, "")
+    end
+  end
+
+  # POST /rides/:id/start
+  def start(conn, %{"id" => ride_id}) do
+    driver = Guardian.Plug.current_resource(conn)
+
+    case Operation.start_ride(ride_id, driver.id) do
+      {:ok, %Ride{} = ride} ->
+        render(conn, :show, ride: ride)
+
+      {:error, :conflict} ->
+        conn |> put_status(:conflict) |> json(%{error: "A corrida deve estar ACEITA para ser iniciada."})
+
+      {:error, :unauthorized} ->
+        conn |> put_status(:forbidden) |> json(%{error: "Você não é o motorista desta corrida."})
+
+      {:error, :not_found} ->
+        conn |> put_status(:not_found) |> json(%{error: "Corrida não encontrada."})
+    end
+  end
+
+  # POST /rides/:id/complete
+  def complete(conn, %{"id" => ride_id, "final_price" => final_price}) do
+    driver = Guardian.Plug.current_resource(conn)
+
+    case Operation.complete_ride(ride_id, driver.id, final_price) do
+      {:ok, %Ride{} = ride} ->
+        render(conn, :show, ride: ride)
+
+      {:error, :conflict} ->
+        conn |> put_status(:conflict) |> json(%{error: "A corrida deve estar EM_ANDAMENTO para ser finalizada."})
+
+      {:error, _} ->
+        conn |> put_status(:bad_request) |> json(%{error: "Erro ao finalizar corrida."})
     end
   end
 end
