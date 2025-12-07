@@ -146,4 +146,25 @@ defmodule Av3Api.Operation do
         |> Repo.update()
     end
   end
+
+  # --- CANCELAR CORRIDA ---
+  def cancel_ride(ride_id) do
+    ride = Repo.get(Ride, ride_id)
+
+    cond do
+      ride == nil -> {:error, :not_found}
+
+      # Só permite cancelar se estiver SOLICITADA ou ACEITA
+      ride.status in ["SOLICITADA", "ACEITA"] ->
+        ride
+        |> Ride.changeset(%{
+             "status" => "CANCELADA",
+             "ended_at" => DateTime.utc_now()
+           })
+        |> Repo.update()
+
+      # Se estiver EM_ANDAMENTO, FINALIZADA ou CANCELADA, dá erro
+      true -> {:error, :conflict}
+    end
+  end
 end

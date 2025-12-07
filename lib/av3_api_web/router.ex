@@ -38,6 +38,7 @@ defmodule Av3ApiWeb.Router do
     post "/rides/:id/accept", RideController, :accept
     post "/rides/:id/start", RideController, :start
     post "/rides/:id/complete", RideController, :complete
+    post "/rides/:id/cancel", RideController, :cancel
 
     # --- RATINGS ---
     post "/rides/:ride_id/ratings", RatingController, :create

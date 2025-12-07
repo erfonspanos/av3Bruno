@@ -124,4 +124,25 @@ defmodule Av3ApiWeb.RideController do
         conn |> put_status(:bad_request) |> json(%{error: "Erro ao finalizar corrida."})
     end
   end
+
+  # POST /api/v1/rides/:id/cancel
+  def cancel(conn, %{"id" => id}) do
+    # Nota: Em um app real, checaríamos se o usuário é o dono da corrida.
+    # Para o trabalho, focamos na validação de status.
+
+    case Operation.cancel_ride(id) do
+      {:ok, %Ride{} = ride} ->
+        render(conn, :show, ride: ride)
+
+      {:error, :conflict} ->
+        conn
+        |> put_status(:conflict)
+        |> json(%{error: "Não é possível cancelar esta corrida (Status inválido)."})
+
+      {:error, :not_found} ->
+        conn
+        |> put_status(:not_found)
+        |> json(%{error: "Corrida não encontrada."})
+    end
+  end
 end
