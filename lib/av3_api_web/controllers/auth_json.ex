@@ -7,7 +7,7 @@ defmodule Av3ApiWeb.AuthJSON do
         id: user.id,
         name: user.name,
         email: user.email,
-        role: "user"
+        role: user.role
       }
     }
   end

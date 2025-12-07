@@ -21,7 +21,7 @@ defmodule Av3Api.Accounts.User do
     # 1. REMOVI :password DAQUI (Agora é opcional no update)
     |> validate_required([:name, :email, :role])
     |> validate_format(:email, ~r/^[^\s]+@[^\s]+$/, message: "must have the @ sign and no spaces")
-    |> validate_inclusion(:role, ["user", "driver"])
+    |> validate_inclusion(:role, ["user", "driver", "admin"])
     |> unique_constraint(:email)
     # 2. CHAMAMOS A VALIDAÇÃO INTELIGENTE DE SENHA
     |> validate_password_lifecycle()

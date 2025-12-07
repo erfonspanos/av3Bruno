@@ -31,6 +31,16 @@ defmodule Av3ApiWeb.AuthController do
     end
   end
 
+  # Registro de ADMIN 
+  def register(conn, %{"role" => "admin"} = params) do
+    with {:ok, %User{} = user} <- Accounts.create_user(params),
+         {:ok, token, _claims} <- Guardian.encode_and_sign(user) do
+      conn
+      |> put_status(:created)
+      |> render(:auth_token, user: user, token: token)
+    end
+  end
+
   # Se tentar registrar sem role ou role errada
   def register(_conn, _params) do
     {:error, :bad_request}
