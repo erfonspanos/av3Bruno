@@ -5,11 +5,13 @@ defmodule Av3Api.Accounts do
 
   import Ecto.Query, warn: false
   alias Av3Api.Repo
-  alias Bcrypt # <--- Importante para checar senha
+  alias Bcrypt
 
   alias Av3Api.Accounts.User
   alias Av3Api.Accounts.Driver
   alias Av3Api.Accounts.DriverProfile
+  alias Av3Api.Accounts.DriverLanguage
+  alias Av3Api.General.Language
 
   # --- FUNÇÕES DE USUÁRIOS (USERS) ---
 
@@ -19,7 +21,6 @@ defmodule Av3Api.Accounts do
 
   def get_user!(id), do: Repo.get!(User, id)
 
-  # Adicionei esta função que retorna nil em vez de erro (para o Guardian)
   def get_user(id), do: Repo.get(User, id)
 
   def create_user(attrs) do
@@ -50,7 +51,6 @@ defmodule Av3Api.Accounts do
 
   def get_driver!(id), do: Repo.get!(Driver, id)
 
-  # Adicionei esta função que retorna nil em vez de erro (para o Guardian)
   def get_driver(id), do: Repo.get(Driver, id)
 
   def create_driver(attrs) do
@@ -101,7 +101,7 @@ defmodule Av3Api.Accounts do
     DriverProfile.changeset(driver_profile, attrs)
   end
 
-  # --- AUTENTICAÇÃO (LOGIN) - NECESSÁRIO PARA O AUTH CONTROLLER ---
+  # --- AUTENTICAÇÃO (LOGIN) ---
 
   def authenticate_user(email, password) do
     user = Repo.get_by(User, email: email)
@@ -129,4 +129,31 @@ defmodule Av3Api.Accounts do
   def get_driver_profile_by_driver(driver_id) do
     Repo.get_by(DriverProfile, driver_id: driver_id)
   end
+
+  # --- VÍNCULO DE IDIOMAS (DRIVER LANGUAGES) ---
+
+  # *** AQUI ESTAVA FALTANDO ESSA FUNÇÃO ***
+  def create_driver_language(attrs) do
+    %DriverLanguage{}
+    |> DriverLanguage.changeset(attrs)
+    |> Repo.insert()
+  end
+  # ****************************************
+
+  # Lista todos os idiomas vinculados a um motorista
+  def list_driver_languages(driver_id) do
+    from(dl in DriverLanguage,
+      join: l in Language, on: dl.language_id == l.id,
+      where: dl.driver_id == ^driver_id,
+      select: %{id: dl.id, language: l.name, code: l.code}
+    )
+    |> Repo.all()
+  end
+
+  # Remove um vínculo de idioma
+  def delete_driver_language(id) do
+    driver_language = Repo.get!(DriverLanguage, id)
+    Repo.delete(driver_language)
+  end
+
 end

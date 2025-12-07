@@ -47,5 +47,13 @@ defmodule Av3ApiWeb.Router do
     post "/drivers/:driver_id/profile", DriverProfileController, :create
     put "/drivers/:driver_id/profile", DriverProfileController, :update
 
+    # --- IDIOMAS (CATÁLOGO GERAL) ---
+    resources "/languages", LanguageController, except: [:new, :edit]
+
+    # --- VÍNCULO MOTORISTA x IDIOMA ---
+    get "/drivers/:driver_id/languages", DriverLanguageController, :index
+    post "/drivers/:driver_id/languages", DriverLanguageController, :create
+    delete "/drivers/:driver_id/languages/:id", DriverLanguageController, :delete
+
   end
 end
