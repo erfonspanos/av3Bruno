@@ -36,4 +36,10 @@ defmodule Av3ApiWeb.RatingController do
     ratings = Feedback.list_ratings()
     render(conn, :index, ratings: ratings)
   end
+
+  # GET /api/v1/drivers/:driver_id/ratings
+  def index_by_driver(conn, %{"driver_id" => driver_id}) do
+    ratings = Feedback.list_ratings_by_driver(driver_id)
+    render(conn, :index, ratings: ratings)
+  end
 end

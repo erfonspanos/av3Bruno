@@ -56,5 +56,7 @@ defmodule Av3ApiWeb.Router do
     post "/drivers/:driver_id/languages", DriverLanguageController, :create
     delete "/drivers/:driver_id/languages/:id", DriverLanguageController, :delete
 
+    # Rota para ver a reputação do motorista
+    get "/drivers/:driver_id/ratings", RatingController, :index_by_driver
   end
 end
