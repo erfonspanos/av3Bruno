@@ -16,6 +16,10 @@ defmodule Av3ApiWeb.Router do
     scope "/v1" do
       post "/auth/register", AuthController, :register
       post "/auth/login", AuthController, :login
+
+      # --- NOVO: IDIOMAS PÚBLICOS ---
+      # Permite listar e ver detalhes sem token
+      resources "/languages", LanguageController, only: [:index, :show]
     end
   end
 
@@ -25,6 +29,8 @@ defmodule Av3ApiWeb.Router do
 
     get "/drivers/:driver_id/vehicles", VehicleController, :index
     post "/drivers/:driver_id/vehicles", VehicleController, :create
+
+    resources "/vehicles", VehicleController, only: [:show, :update, :delete]
 
     # CRUD de Motoristas (exceto create, que é via register)
     resources "/drivers", DriverController, except: [:new, :edit, :create]
@@ -48,8 +54,9 @@ defmodule Av3ApiWeb.Router do
     post "/drivers/:driver_id/profile", DriverProfileController, :create
     put "/drivers/:driver_id/profile", DriverProfileController, :update
 
-    # --- IDIOMAS (CATÁLOGO GERAL) ---
-    resources "/languages", LanguageController, except: [:new, :edit]
+    # --- IDIOMAS PROTEGIDOS (ADMIN) ---
+    # Aqui deixamos apenas Criar, Editar e Deletar
+    resources "/languages", LanguageController, only: [:create, :update, :delete]
 
     # --- VÍNCULO MOTORISTA x IDIOMA ---
     get "/drivers/:driver_id/languages", DriverLanguageController, :index
