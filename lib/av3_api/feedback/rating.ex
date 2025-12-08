@@ -8,9 +8,6 @@ defmodule Av3Api.Feedback.Rating do
 
     belongs_to :ride, Av3Api.Operation.Ride
 
-    # O PDF sugere guardar quem avaliou quem. Vamos adicionar virtualmente ou inferir.
-    # Por simplicidade e tempo, vamos focar na nota da corrida.
-
     timestamps(type: :utc_datetime)
   end
 

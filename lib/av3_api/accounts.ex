@@ -132,15 +132,12 @@ defmodule Av3Api.Accounts do
 
   # --- VÍNCULO DE IDIOMAS (DRIVER LANGUAGES) ---
 
-  # *** AQUI ESTAVA FALTANDO ESSA FUNÇÃO ***
   def create_driver_language(attrs) do
     %DriverLanguage{}
     |> DriverLanguage.changeset(attrs)
     |> Repo.insert()
   end
-  # ****************************************
 
-  # Lista todos os idiomas vinculados a um motorista
   def list_driver_languages(driver_id) do
     from(dl in DriverLanguage,
       join: l in Language, on: dl.language_id == l.id,
@@ -150,7 +147,6 @@ defmodule Av3Api.Accounts do
     |> Repo.all()
   end
 
-  # Remove um vínculo de idioma
   def delete_driver_language(id) do
     driver_language = Repo.get!(DriverLanguage, id)
     Repo.delete(driver_language)

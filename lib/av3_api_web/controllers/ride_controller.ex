@@ -4,7 +4,7 @@ defmodule Av3ApiWeb.RideController do
   alias Av3Api.Operation
   alias Av3Api.Operation.Ride
   alias Av3Api.Guardian
-  alias Av3Api.Accounts.Driver # Adicionei este alias para usar no teste de tipo
+  alias Av3Api.Accounts.Driver
 
   action_fallback Av3ApiWeb.FallbackController
 
@@ -39,15 +39,12 @@ defmodule Av3ApiWeb.RideController do
     render(conn, :show, ride: ride)
   end
 
-  # --- POST /api/v1/rides/:id/accept (CORRIGIDO) ---
+  # POST /api/v1/rides/:id/accept
   def accept(conn, %{"id" => ride_id, "vehicle_id" => vehicle_id}) do
-    # Pegamos o recurso logado (pode ser User ou Driver)
     resource = Guardian.Plug.current_resource(conn)
 
-    # Verificamos SE é um Motorista usando Pattern Matching do Elixir
     case resource do
       %Driver{} = driver ->
-        # É um motorista! Podemos prosseguir.
         case Operation.accept_ride(ride_id, driver.id, vehicle_id) do
           {:ok, %Ride{} = ride} ->
             render(conn, :show, ride: ride)
@@ -69,7 +66,6 @@ defmodule Av3ApiWeb.RideController do
         end
 
       _ ->
-        # Se não for %Driver{} (ex: é um %User{}), bloqueamos.
         conn
         |> put_status(:forbidden)
         |> json(%{error: "Apenas motoristas podem aceitar corridas."})
@@ -127,8 +123,6 @@ defmodule Av3ApiWeb.RideController do
 
   # POST /api/v1/rides/:id/cancel
   def cancel(conn, %{"id" => id}) do
-    # Nota: Em um app real, checaríamos se o usuário é o dono da corrida.
-    # Para o trabalho, focamos na validação de status.
 
     case Operation.cancel_ride(id) do
       {:ok, %Ride{} = ride} ->

@@ -7,28 +7,24 @@ defmodule Av3ApiWeb.VehicleController do
   action_fallback Av3ApiWeb.FallbackController
 
   # GET /api/v1/drivers/:driver_id/vehicles
-  # Ajustado para receber o driver_id da URL e filtrar
   def index(conn, %{"driver_id" => driver_id}) do
     vehicles = Fleet.list_vehicles_by_driver(driver_id)
     render(conn, :index, vehicles: vehicles)
   end
 
   # POST /api/v1/drivers/:driver_id/vehicles
-  # Ajustado para injetar o driver_id no cadastro
   def create(conn, %{"driver_id" => driver_id} = params) do
-    # Mescla o ID da URL com os dados do corpo (plate, model, etc)
     vehicle_params = Map.put(params, "driver_id", driver_id)
 
     with {:ok, %Vehicle{} = vehicle} <- Fleet.create_vehicle(vehicle_params) do
       conn
       |> put_status(:created)
-      # Comentei a linha abaixo para evitar o erro de rota "no route path matches"
       # |> put_resp_header("location", ~p"/api/vehicles/#{vehicle}")
       |> render(:show, vehicle: vehicle)
     end
   end
 
-  # GET /api/v1/vehicles/:id (Se houver essa rota)
+  # GET /api/v1/vehicles/:id
   def show(conn, %{"id" => id}) do
     vehicle = Fleet.get_vehicle!(id)
     render(conn, :show, vehicle: vehicle)

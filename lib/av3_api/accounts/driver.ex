@@ -20,12 +20,10 @@ defmodule Av3Api.Accounts.Driver do
   def changeset(driver, attrs) do
     driver
     |> cast(attrs, [:name, :email, :phone, :password, :status])
-    # 1. REMOVI :password DAQUI
     |> validate_required([:name, :email])
     |> validate_format(:email, ~r/^[^\s]+@[^\s]+$/, message: "must have the @ sign and no spaces")
     |> validate_inclusion(:status, ["ACTIVE", "INACTIVE", "BUSY"])
     |> unique_constraint(:email)
-    # 2. VALIDAÇÃO INTELIGENTE
     |> validate_password_lifecycle()
   end
 

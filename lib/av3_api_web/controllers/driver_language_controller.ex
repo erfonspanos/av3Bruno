@@ -14,11 +14,9 @@ defmodule Av3ApiWeb.DriverLanguageController do
   end
 
   # POST /api/v1/drivers/:driver_id/languages
-  # Espera Body: {"language_id": 1}
   def create(conn, %{"driver_id" => driver_id, "language_id" => language_id}) do
     current_driver = Guardian.Plug.current_resource(conn)
 
-    # Segurança: Só o próprio motorista pode adicionar idiomas ao seu perfil
     if to_string(current_driver.id) != to_string(driver_id) do
        conn |> put_status(:forbidden) |> json(%{error: "Acesso negado."})
     else
@@ -33,7 +31,6 @@ defmodule Av3ApiWeb.DriverLanguageController do
   end
 
   # DELETE /api/v1/drivers/:driver_id/languages/:id
-  # Aqui o :id é o ID do VÍNCULO (driver_language.id), não do idioma
   def delete(conn, %{"driver_id" => driver_id, "id" => id}) do
     current_driver = Guardian.Plug.current_resource(conn)
 

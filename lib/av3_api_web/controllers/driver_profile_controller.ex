@@ -9,7 +9,6 @@ defmodule Av3ApiWeb.DriverProfileController do
 
   # GET /api/v1/drivers/:driver_id/profile
   def show(conn, %{"driver_id" => driver_id}) do
-    # Verifica permissão: Só o próprio motorista pode ver seus dados sensíveis
     current_driver = Guardian.Plug.current_resource(conn)
 
     if to_string(current_driver.id) != to_string(driver_id) do
@@ -28,7 +27,6 @@ defmodule Av3ApiWeb.DriverProfileController do
   def create(conn, %{"driver_id" => driver_id} = params) do
     current_driver = Guardian.Plug.current_resource(conn)
 
-    # Segurança: Garante que é o dono e que é um motorista
     cond do
       to_string(current_driver.id) != to_string(driver_id) ->
          conn |> put_status(:forbidden) |> json(%{error: "Você não pode criar perfil para outro motorista."})

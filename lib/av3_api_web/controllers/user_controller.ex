@@ -63,7 +63,6 @@ defmodule Av3ApiWeb.UserController do
     end
   end
 
-  # --- FUNÇÕES AUXILIARES DE SEGURANÇA ---
 
   defp is_admin?(%User{role: "admin"}), do: true
   defp is_admin?(_), do: false
@@ -71,6 +70,5 @@ defmodule Av3ApiWeb.UserController do
   defp is_owner?(%User{id: current_id}, target_id) do
     to_string(current_id) == to_string(target_id)
   end
-  # Caso o recurso logado seja um Driver tentando acessar User, retornamos false
   defp is_owner?(_, _), do: false
 end

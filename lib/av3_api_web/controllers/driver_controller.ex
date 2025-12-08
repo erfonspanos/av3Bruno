@@ -6,19 +6,19 @@ defmodule Av3ApiWeb.DriverController do
 
   action_fallback Av3ApiWeb.FallbackController
 
-  # GET /api/v1/drivers (Listar todos)
+  # GET /api/v1/drivers 
   def index(conn, _params) do
     drivers = Accounts.list_drivers()
     render(conn, :index, drivers: drivers)
   end
 
-  # GET /api/v1/drivers/:id (Ver perfil)
+  # GET /api/v1/drivers/:id
   def show(conn, %{"id" => id}) do
     driver = Accounts.get_driver!(id)
     render(conn, :show, driver: driver)
   end
 
-  # PUT /api/v1/drivers/:id (Atualizar)
+  # PUT /api/v1/drivers/:id
   def update(conn, %{"id" => id} = driver_params) do
     driver = Accounts.get_driver!(id)
 

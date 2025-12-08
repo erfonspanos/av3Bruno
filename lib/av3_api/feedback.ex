@@ -7,7 +7,7 @@ defmodule Av3Api.Feedback do
   alias Av3Api.Repo
 
   alias Av3Api.Feedback.Rating
-  alias Av3Api.Operation.Ride 
+  alias Av3Api.Operation.Ride
 
   @doc """
   Returns the list of ratings.
@@ -15,13 +15,10 @@ defmodule Av3Api.Feedback do
   def list_ratings do
     Repo.all(Rating)
   end
-
-  # --- NOVA FUNÇÃO: LISTAR AVALIAÇÕES DO MOTORISTA ---
-  # Essa função cruza as tabelas: Rating -> Ride -> Driver
   def list_ratings_by_driver(driver_id) do
     from(r in Rating,
-      join: ride in assoc(r, :ride),       # Junta com a tabela de corridas
-      where: ride.driver_id == ^driver_id, # Filtra onde o motorista é o solicitado
+      join: ride in assoc(r, :ride),       
+      where: ride.driver_id == ^driver_id,
       select: r
     )
     |> Repo.all()

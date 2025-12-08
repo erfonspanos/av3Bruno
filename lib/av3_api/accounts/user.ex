@@ -18,17 +18,14 @@ defmodule Av3Api.Accounts.User do
   def changeset(user, attrs) do
     user
     |> cast(attrs, [:name, :email, :phone, :password, :role])
-    # 1. REMOVI :password DAQUI (Agora é opcional no update)
     |> validate_required([:name, :email, :role])
     |> validate_format(:email, ~r/^[^\s]+@[^\s]+$/, message: "must have the @ sign and no spaces")
     |> validate_inclusion(:role, ["user", "driver", "admin"])
     |> unique_constraint(:email)
-    # 2. CHAMAMOS A VALIDAÇÃO INTELIGENTE DE SENHA
     |> validate_password_lifecycle()
   end
 
   defp validate_password_lifecycle(changeset) do
-    # Verifica se é criação (sem ID) OU se a senha foi enviada para troca
     if is_nil(changeset.data.id) || get_change(changeset, :password) do
       changeset
       |> validate_required([:password])

@@ -4,17 +4,17 @@ defmodule Av3ApiWeb.LanguageController do
   alias Av3Api.General
   alias Av3Api.General.Language
   alias Av3Api.Guardian
-  alias Av3Api.Accounts.User # Necessário para checar a role
+  alias Av3Api.Accounts.User 
 
   action_fallback Av3ApiWeb.FallbackController
 
-  # GET /api/v1/languages (Acessível para qualquer usuário logado)
+  # GET /api/v1/languages
   def index(conn, _params) do
     languages = General.list_languages()
     render(conn, :index, languages: languages)
   end
 
-  # POST /api/v1/languages (BLINDADO: SÓ ADMIN)
+  # POST /api/v1/languages (SÓ ADMIN)
   def create(conn, language_params) do
     current_user = Guardian.Plug.current_resource(conn)
 
@@ -29,13 +29,13 @@ defmodule Av3ApiWeb.LanguageController do
     end
   end
 
-  # GET /api/v1/languages/:id (Acessível para qualquer usuário logado)
+  # GET /api/v1/languages/:id
   def show(conn, %{"id" => id}) do
     language = General.get_language!(id)
     render(conn, :show, language: language)
   end
 
-  # PUT /api/v1/languages/:id (BLINDADO: SÓ ADMIN)
+  # PUT /api/v1/languages/:id (SÓ ADMIN)
   def update(conn, %{"id" => id} = language_params) do
     current_user = Guardian.Plug.current_resource(conn)
 
@@ -50,7 +50,7 @@ defmodule Av3ApiWeb.LanguageController do
     end
   end
 
-  # DELETE /api/v1/languages/:id (BLINDADO: SÓ ADMIN)
+  # DELETE /api/v1/languages/:id (SÓ ADMIN)
   def delete(conn, %{"id" => id}) do
     current_user = Guardian.Plug.current_resource(conn)
 
@@ -65,7 +65,6 @@ defmodule Av3ApiWeb.LanguageController do
     end
   end
 
-  # Função auxiliar para verificar se é Admin
   defp is_admin?(%User{role: "admin"}), do: true
   defp is_admin?(_), do: false
 end
